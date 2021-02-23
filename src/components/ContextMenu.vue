@@ -1,9 +1,9 @@
 <template>
   <div
-    class="context-menu"
-    v-show="state.show"
-    :style="state.style"
-    ref="context"
+    class="context-menu bg-white shadow-xl p-5"
+    v-show="show"
+    :style="style"
+    ref="menu"
     tabindex="0"
     @blur="close"
   >
@@ -12,11 +12,11 @@
 </template>
 
 <script>
-import { nextTick, computed, reactive, ref } from "vue";
+import { nextTick, computed, reactive, ref, toRefs } from "vue";
 
 export default {
-  setup() {
-    const context = ref(null);
+  setup(props, { emit }) {
+    const menu = ref(null);
 
     const state = reactive({
       left: 0,
@@ -27,19 +27,27 @@ export default {
         left: state.left + "px",
       })),
     });
-    const close = () => {
+    const close = (event) => {
+      if (event.currentTarget.contains(event.relatedTarget)) {
+        return;
+      }
       state.show = false;
       state.left = 0;
       state.top = 0;
+      emit("closed");
     };
     const open = async ({ x, y }) => {
       state.left = x;
       state.top = y;
-      await nextTick();
-      context.value.focus();
       state.show = true;
+      await nextTick();
+      if (menu.value.offsetTop + menu.value.offsetHeight > window.innerHeight) {
+        state.top = window.innerHeight - menu.value.offsetHeight;
+        state.left += 30;
+      }
+      menu.value.focus();
     };
-    return { state, close, open, context };
+    return { ...toRefs(state), close, open, menu };
   },
 };
 </script>
@@ -47,15 +55,7 @@ export default {
 <style lang="scss" scoped>
 .context-menu {
   position: fixed;
-  background: white;
-  z-index: 999;
+  z-index: 9999;
   outline: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  cursor: pointer;
-  ::v-deep ul {
-    padding: 1rem;
-    margin: 0;
-    list-style-type: none;
-  }
 }
 </style>
