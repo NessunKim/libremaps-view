@@ -1,62 +1,60 @@
 <template>
-  <div class="wrapper">
-    <div id="map"></div>
-    <context-menu ref="menu" @closed="onContextMenuClosed">
-      <div>
-        <p class="mb-2">이 위치에 마커를 추가합니다.</p>
-        <label class="new-marker-label" for="page-name">연결할 문서</label>
-        <input
-          name="page-name"
-          type="text"
-          class="new-marker-input"
-          :class="{ 'new-marker-input-invalid': newMarkerForm.invalidPageName }"
-          placeholder="연결할 문서"
-          v-model="newMarkerForm.pageName"
-          @input="() => (newMarkerForm.markerName = newMarkerForm.pageName)"
-        />
-        <label class="new-marker-label" for="marker-name">마커의 이름</label>
-        <input
-          name="marker-name"
-          type="text"
-          class="new-marker-input"
-          :class="{
-            'new-marker-input-invalid': newMarkerForm.invalidMarkerName,
-          }"
-          placeholder="마커의 이름"
-          v-model="newMarkerForm.markerName"
-        />
-        <label class="new-marker-label" for="latitude">위도</label>
-        <input
-          name="latitude"
-          type="text"
-          class="new-marker-input"
-          placeholder="위도"
-          v-model="newMarkerForm.latitude"
-        />
-        <label class="new-marker-label" for="longitude">경도</label>
-        <input
-          name="longitude"
-          type="text"
-          class="new-marker-input"
-          placeholder="경도"
-          v-model="newMarkerForm.longitude"
-        />
-        <label class="new-marker-label" for="zoom"
-          >확대 수준(이 수준보다 축소시 숨김)</label
-        >
-        <vue-slider
-          name="zoom"
-          class="mb-3"
-          v-model="newMarkerForm.zoom"
-          :max="18"
-          :min="0"
-        />
-        <button class="new-marker-submit" @click="onSubmit">
-          추가 (위키로 이동)
-        </button>
-      </div>
-    </context-menu>
-  </div>
+  <div id="map" class="z-0"></div>
+  <context-menu ref="menu" @closed="onContextMenuClosed">
+    <div>
+      <p class="mb-2">이 위치에 마커를 추가합니다.</p>
+      <label class="new-marker-label" for="page-name">연결할 문서</label>
+      <input
+        name="page-name"
+        type="text"
+        class="new-marker-input"
+        :class="{ 'new-marker-input-invalid': newMarkerForm.invalidPageName }"
+        placeholder="연결할 문서"
+        v-model="newMarkerForm.pageName"
+        @input="() => (newMarkerForm.markerName = newMarkerForm.pageName)"
+      />
+      <label class="new-marker-label" for="marker-name">마커의 이름</label>
+      <input
+        name="marker-name"
+        type="text"
+        class="new-marker-input"
+        :class="{
+          'new-marker-input-invalid': newMarkerForm.invalidMarkerName,
+        }"
+        placeholder="마커의 이름"
+        v-model="newMarkerForm.markerName"
+      />
+      <label class="new-marker-label" for="latitude">위도</label>
+      <input
+        name="latitude"
+        type="text"
+        class="new-marker-input"
+        placeholder="위도"
+        v-model="newMarkerForm.latitude"
+      />
+      <label class="new-marker-label" for="longitude">경도</label>
+      <input
+        name="longitude"
+        type="text"
+        class="new-marker-input"
+        placeholder="경도"
+        v-model="newMarkerForm.longitude"
+      />
+      <label class="new-marker-label" for="zoom"
+        >확대 수준(이 수준보다 축소시 숨김)</label
+      >
+      <vue-slider
+        name="zoom"
+        class="mb-3"
+        v-model="newMarkerForm.zoom"
+        :max="18"
+        :min="0"
+      />
+      <button class="new-marker-submit" @click="onSubmit">
+        추가 (위키로 이동)
+      </button>
+    </div>
+  </context-menu>
 </template>
 
 <script>
@@ -90,21 +88,29 @@ const useMap = () => {
   const updateMarkers = async () => {
     const bounds = map.getBounds();
     const zoom = map.getZoom();
+    const nw = bounds.getNorthWest().wrap();
+    const se = bounds.getSouthEast().wrap();
     const params = {
-      north: bounds.getNorth(),
-      south: bounds.getSouth(),
-      west: bounds.getWest(),
-      east: bounds.getEast(),
+      north: nw.lat,
+      south: se.lat,
+      west: nw.lng,
+      east: se.lng,
       zoom,
     };
     const { data } = await axios.get("http://localhost:8081/markers", {
       params,
     });
+    console.log(data);
     markers.map((m) => m.remove());
     markers.length = 0;
     data.data.map(({ attributes }) => {
+      const unwrap =
+        Math.ceil((bounds.getWest() - attributes.longitude) / 360) * 360;
       markers.push(
-        L.marker([attributes.latitude, attributes.longitude]).addTo(map)
+        L.marker([attributes.latitude, attributes.longitude + unwrap])
+          .addTo(map)
+          .bindTooltip(attributes.name)
+          .openTooltip()
       );
     });
   };
@@ -115,7 +121,7 @@ const useMap = () => {
     }
     newMarkerDummy = L.marker([e.latlng.lat, e.latlng.lng]).addTo(map);
     newMarkerForm.latitude = e.latlng.lat;
-    newMarkerForm.longitude = e.latlng.lng;
+    newMarkerForm.longitude = e.latlng.wrap().lng;
     newMarkerForm.zoom = map.getZoom();
     menu.value.open({
       x: e.originalEvent.clientX,
@@ -185,8 +191,7 @@ export default {
 
 <style lang="scss" scoped>
 #map {
-  width: 80%;
-  height: 80vh;
+  @apply w-10/12 h-screen;
 }
 
 .new-marker-label {
