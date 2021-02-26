@@ -45,6 +45,9 @@ export default {
         state.top = window.innerHeight - menu.value.offsetHeight;
         state.left += 30;
       }
+      if (menu.value.offsetLeft + menu.value.offsetWidth > window.innerWidth) {
+        state.left = x - menu.value.offsetWidth - 30;
+      }
       menu.value.focus();
     };
     return { ...toRefs(state), close, open, menu };
