@@ -1,5 +1,5 @@
 <template>
-  <LeftPanel :url="url" class="w-4/12" />
+  <LeftPanel :url="url" />
   <Map @update-panel="onUpdatePanel" />
 </template>
 
@@ -15,7 +15,7 @@ export default {
     LeftPanel,
   },
   setup() {
-    const url = ref(null);
+    const url = ref("https://librewiki.net");
     const onUpdatePanel = (id) => {
       url.value = id;
     };

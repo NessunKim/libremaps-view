@@ -1,5 +1,5 @@
 <template>
-  <div id="map" class="z-0"></div>
+  <div id="map"></div>
   <context-menu ref="menu" @closed="onContextMenuClosed">
     <div>
       <p class="mb-2">이 위치에 마커를 추가합니다.</p>
@@ -156,6 +156,7 @@ const useMap = ({ emit }) => {
 
   onMounted(async () => {
     map = L.map("map").setView([37.7, 126.7], 7);
+    window.map = map;
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | &copy; <a href="https://librewiki.net">Libre Wiki</a> contributors',
@@ -190,7 +191,7 @@ export default {
 
 <style lang="scss" scoped>
 #map {
-  @apply h-screen;
+  @apply h-screen z-0;
 }
 
 .new-marker-label {
