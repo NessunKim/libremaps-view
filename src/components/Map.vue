@@ -68,7 +68,7 @@ import ContextMenu from "./ContextMenu";
 import VueSlider from "vue-slider-component";
 import "vue-slider-component/theme/antd.css";
 
-const useMap = () => {
+const useMap = ({ emit }) => {
   let map = null;
   let newMarkerDummy = null;
 
@@ -100,18 +100,16 @@ const useMap = () => {
     const { data } = await axios.get("http://localhost:8081/markers", {
       params,
     });
-    console.log(data);
     markers.map((m) => m.remove());
     markers.length = 0;
-    data.data.map(({ attributes }) => {
-      const unwrap =
-        Math.ceil((bounds.getWest() - attributes.longitude) / 360) * 360;
-      markers.push(
-        L.marker([attributes.latitude, attributes.longitude + unwrap])
-          .addTo(map)
-          .bindTooltip(attributes.name)
-          .openTooltip()
-      );
+    data.data.map(({ attributes: { latitude, longitude, name, page_id } }) => {
+      const unwrap = Math.ceil((bounds.getWest() - longitude) / 360) * 360;
+      const marker = L.marker([latitude, longitude + unwrap]);
+      marker.addTo(map).bindTooltip(name, { permanent: true }).openTooltip();
+      marker.on("click", () => {
+        emit("updatePanel", `https://librewiki.net/index.php?curid=${page_id}`);
+      });
+      markers.push(marker);
     });
   };
 
@@ -179,19 +177,20 @@ const useMap = () => {
 };
 
 export default {
+  emits: ["updatePanel"],
   components: {
     ContextMenu,
     VueSlider,
   },
-  setup() {
-    return { ...useMap() };
+  setup(props, { emit }) {
+    return { ...useMap({ emit }) };
   },
 };
 </script>
 
 <style lang="scss" scoped>
 #map {
-  @apply w-10/12 h-screen;
+  @apply h-screen;
 }
 
 .new-marker-label {

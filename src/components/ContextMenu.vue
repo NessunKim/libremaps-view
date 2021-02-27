@@ -15,6 +15,7 @@
 import { nextTick, computed, reactive, ref, toRefs } from "vue";
 
 export default {
+  emits: ["closed"],
   setup(props, { emit }) {
     const menu = ref(null);
 
