@@ -97,7 +97,7 @@ const useMap = ({ emit }) => {
       east: se.lng,
       zoom,
     };
-    const { data } = await axios.get("http://localhost:8081/markers", {
+    const { data } = await axios.get("//api.maps.librewiki.net/markers", {
       params,
     });
     markers.map((m) => m.remove());
