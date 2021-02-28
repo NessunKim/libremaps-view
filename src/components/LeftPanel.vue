@@ -1,7 +1,7 @@
 <template>
   <div
     class="top-0 z-50 bg-white float-left shadow-2xl h-screen relative"
-    :class="{ 'w-4/12': open, 'w-0': !open }"
+    :class="{ 'lg:w-4/12 w-11/12': open, 'w-0': !open }"
   >
     <iframe :src="url" class="w-full h-full" />
     <button
